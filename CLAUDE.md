@@ -126,3 +126,72 @@ client = AsyncAnthropic(api_key=request.config.api_key, base_url=request.config.
 ```
 
 This fix is required for custom Anthropic endpoints to work with the main agent orchestration pipeline. Without this fix, you'll get `401 authentication_error: invalid x-api-key` errors because the request goes to the official Anthropic API instead of your custom endpoint.
+
+### mcp-agent Library Bug Fix 2: Streaming Required for Opus Models
+
+When using `claude-opus-4-5-20251101` or other large models, Anthropic requires streaming for requests that may take longer than 10 minutes. The mcp-agent library uses non-streaming calls by default.
+
+**File**: `.venv/Lib/site-packages/mcp_agent/workflows/llm/augmented_llm_anthropic.py`
+
+**Location**: `_execute_anthropic_async` function (around line 124)
+
+**Fix**: Change:
+```python
+async def _execute_anthropic_async(client: AsyncAnthropic, payload: dict) -> Message:
+    try:
+        return await client.messages.create(**payload)
+    except _NON_RETRYABLE_ANTHROPIC_ERRORS as exc:
+        raise to_application_error(exc, non_retryable=True) from exc
+```
+
+To:
+```python
+async def _execute_anthropic_async(client: AsyncAnthropic, payload: dict) -> Message:
+    try:
+        # Use streaming to avoid timeout for long-running requests (required for Opus models)
+        async with client.messages.stream(**payload) as stream:
+            response = await stream.get_final_message()
+        return response
+    except _NON_RETRYABLE_ANTHROPIC_ERRORS as exc:
+        raise to_application_error(exc, non_retryable=True) from exc
+```
+
+Without this fix, you'll get `Streaming is required for operations that may take longer than 10 minutes` errors when using Opus models.
+
+### mcp-agent Library Bug Fix 3: Streaming Response Serialization
+
+After enabling streaming (Bug Fix 2), the response object may contain attributes that don't have `__dict__`, causing `vars() argument must have __dict__ attribute` errors.
+
+**File**: `.venv/Lib/site-packages/mcp_agent/utils/common.py`
+
+**Location**: `ensure_serializable` function (around line 42)
+
+**Fix**: Add a safe serialization helper and update `ensure_serializable`:
+```python
+def _safe_serialize(obj):
+    """Safely serialize an object, handling objects without __dict__."""
+    if hasattr(obj, 'model_dump'):
+        return obj.model_dump()
+    elif hasattr(obj, '__dict__'):
+        return vars(obj)
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
+
+def ensure_serializable(data: BaseModel) -> BaseModel:
+    """
+    Workaround for https://github.com/pydantic/pydantic/issues/7713
+    """
+    try:
+        json.dumps(data)
+    except TypeError:
+        # use safe serialization to coerce nested data into dictionaries
+        data_json_from_dicts = json.dumps(data, default=_safe_serialize)
+        data_obj = json.loads(data_json_from_dicts)
+        data = type(data)(**data_obj)
+    return data
+```
+
+Without this fix, you'll get `vars() argument must have __dict__ attribute` errors when using streaming with Opus models.

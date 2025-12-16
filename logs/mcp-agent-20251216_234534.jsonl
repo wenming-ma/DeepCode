@@ -1,0 +1,16 @@
+{"level":"INFO","timestamp":"2025-12-16T23:45:34.892971","namespace":"mcp_agent.core.context","message":"Configuring logger with level: info"}
+{"level":"INFO","timestamp":"2025-12-16T23:45:35.456505","namespace":"mcp_agent.paper_to_code","message":"Loading subagents from configuration..."}
+{"level":"INFO","timestamp":"2025-12-16T23:45:35.712569","namespace":"mcp_agent.paper_to_code","message":"Found subagents in C:\\Users\\wenming/.claude/agents","data":{"data":{"count":16}}}
+{"level":"INFO","timestamp":"2025-12-16T23:45:35.712798","namespace":"mcp_agent.paper_to_code","message":"Loaded subagents","data":{"data":{"count":16,"agents":["bmad-architect","bmad-dev","bmad-orchestrator","bmad-po","bmad-qa","bmad-review","bmad-sm","bugfix-verify","bugfix","code","debug","optimize","requirements-code","requirements-generate","requirements-review","requirements-testing"]}}}
+{"level":"INFO","timestamp":"2025-12-16T23:45:35.713069","namespace":"mcp_agent.paper_to_code","message":"MCPApp initialized","data":{"data":{"progress_action":"Running","target":"paper_to_code","agent_name":"mcp_application_loop","session_id":"28ad5f39-f181-4c1a-a2af-04188ed0080f"}}}
+{"level":"INFO","timestamp":"2025-12-16T23:45:36.642425","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"brave: Up and running with a persistent connection!"}
+{"level":"INFO","timestamp":"2025-12-16T23:45:45.266016","namespace":"mcp_agent.mcp.mcp_aggregator.ResearchAnalyzerAgent","message":"Requesting tool call","data":{"data":{"progress_action":"Calling Tool","tool_name":"brave_web_search","server_name":"brave","agent_name":"ResearchAnalyzerAgent"}}}
+{"level":"INFO","timestamp":"2025-12-16T23:45:53.128345","namespace":"mcp_agent.mcp.mcp_aggregator.ResearchAnalyzerAgent","message":"Last aggregator closing, shutting down all persistent connections..."}
+{"level":"INFO","timestamp":"2025-12-16T23:45:53.128645","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"Disconnecting all persistent server connections..."}
+{"level":"INFO","timestamp":"2025-12-16T23:45:53.129687","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"brave: Requesting shutdown..."}
+{"level":"INFO","timestamp":"2025-12-16T23:45:53.337616","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"All persistent server connections signaled to disconnect."}
+{"level":"INFO","timestamp":"2025-12-16T23:45:54.198970","namespace":"mcp_agent.mcp.mcp_aggregator.ResearchAnalyzerAgent","message":"Connection manager successfully closed and removed from context"}
+{"level":"INFO","timestamp":"2025-12-16T23:45:59.516405","namespace":"mcp_agent.paper_to_code","message":"\ud83d\udccb Paper ID: 2"}
+{"level":"INFO","timestamp":"2025-12-16T23:45:59.516490","namespace":"mcp_agent.paper_to_code","message":"\ud83d\udcc2 Paper directory: ./deepcode_lab/papers\\2"}
+{"level":"INFO","timestamp":"2025-12-16T23:45:59.516559","namespace":"mcp_agent.paper_to_code","message":"\ud83d\udce5 Processing url: https://arxiv.org/html/2512.07921v1"}
+{"level":"INFO","timestamp":"2025-12-16T23:45:59.516599","namespace":"mcp_agent.paper_to_code","message":"\ud83c\udf10 Direct URL download: https://arxiv.org/html/2512.07921v1 -> ./deepcode_lab/papers\\2"}

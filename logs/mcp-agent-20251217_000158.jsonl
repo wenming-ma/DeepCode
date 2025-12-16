@@ -1,0 +1,12 @@
+{"level":"INFO","timestamp":"2025-12-17T00:01:58.734419","namespace":"mcp_agent.core.context","message":"Configuring logger with level: info"}
+{"level":"INFO","timestamp":"2025-12-17T00:01:59.209834","namespace":"mcp_agent.paper_to_code","message":"Loading subagents from configuration..."}
+{"level":"INFO","timestamp":"2025-12-17T00:01:59.222356","namespace":"mcp_agent.paper_to_code","message":"Found subagents in C:\\Users\\wenming/.claude/agents","data":{"data":{"count":16}}}
+{"level":"INFO","timestamp":"2025-12-17T00:01:59.222561","namespace":"mcp_agent.paper_to_code","message":"Loaded subagents","data":{"data":{"count":16,"agents":["bmad-architect","bmad-dev","bmad-orchestrator","bmad-po","bmad-qa","bmad-review","bmad-sm","bugfix-verify","bugfix","code","debug","optimize","requirements-code","requirements-generate","requirements-review","requirements-testing"]}}}
+{"level":"INFO","timestamp":"2025-12-17T00:01:59.222853","namespace":"mcp_agent.paper_to_code","message":"MCPApp initialized","data":{"data":{"progress_action":"Running","target":"paper_to_code","agent_name":"mcp_application_loop","session_id":"3dd15b6c-7116-4fda-baaa-3c4e19f69130"}}}
+{"level":"INFO","timestamp":"2025-12-17T00:02:00.156559","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"brave: Up and running with a persistent connection!"}
+{"level":"ERROR","timestamp":"2025-12-17T00:02:08.805660","namespace":"mcp_agent.executor.executor","message":"Error executing task: vars() argument must have __dict__ attribute"}
+{"level":"ERROR","timestamp":"2025-12-17T00:02:08.805736","namespace":"mcp_agent.workflows.llm.augmented_llm_anthropic.ResearchAnalyzerAgent","message":"Error: vars() argument must have __dict__ attribute"}
+{"level":"INFO","timestamp":"2025-12-17T00:02:08.806749","namespace":"mcp_agent.mcp.mcp_aggregator.ResearchAnalyzerAgent","message":"Last aggregator closing, shutting down all persistent connections..."}
+{"level":"INFO","timestamp":"2025-12-17T00:02:08.807136","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"Disconnecting all persistent server connections..."}
+{"level":"INFO","timestamp":"2025-12-17T00:02:08.810920","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"brave: Requesting shutdown..."}
+{"level":"INFO","timestamp":"2025-12-17T00:02:09.018302","namespace":"mcp_agent.mcp.mcp_connection_manager","message":"All persistent server connections signaled to disconnect."}
