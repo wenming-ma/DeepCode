@@ -326,7 +326,14 @@ class CodeIndexer:
             try:
                 from anthropic import AsyncAnthropic
 
-                client = AsyncAnthropic(api_key=anthropic_key)
+                anthropic_config = self.api_config.get("anthropic", {})
+                base_url = anthropic_config.get("base_url")
+
+                if base_url:
+                    client = AsyncAnthropic(api_key=anthropic_key, base_url=base_url)
+                else:
+                    client = AsyncAnthropic(api_key=anthropic_key)
+
                 # Test connection with default model from config
                 await client.messages.create(
                     model=self.default_models["anthropic"],
@@ -336,6 +343,8 @@ class CodeIndexer:
                 self.logger.info(
                     f"Using Anthropic API with model: {self.default_models['anthropic']}"
                 )
+                if base_url:
+                    self.logger.info(f"Using custom base URL: {base_url}")
                 self.llm_client = client
                 self.llm_client_type = "anthropic"
                 return client, "anthropic"

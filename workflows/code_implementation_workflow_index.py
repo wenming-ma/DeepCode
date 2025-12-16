@@ -523,7 +523,14 @@ Requirements:
             try:
                 from anthropic import AsyncAnthropic
 
-                client = AsyncAnthropic(api_key=anthropic_key)
+                anthropic_config = self.api_config.get("anthropic", {})
+                base_url = anthropic_config.get("base_url")
+
+                if base_url:
+                    client = AsyncAnthropic(api_key=anthropic_key, base_url=base_url)
+                else:
+                    client = AsyncAnthropic(api_key=anthropic_key)
+
                 await client.messages.create(
                     model=self.default_models["anthropic"],
                     max_tokens=20,
@@ -532,6 +539,8 @@ Requirements:
                 self.logger.info(
                     f"Using Anthropic API with model: {self.default_models['anthropic']}"
                 )
+                if base_url:
+                    self.logger.info(f"Using custom base URL: {base_url}")
                 return client, "anthropic"
             except Exception as e:
                 self.logger.warning(f"Anthropic API unavailable: {e}")

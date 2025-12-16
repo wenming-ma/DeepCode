@@ -1032,7 +1032,7 @@ def initialize_session_state():
         st.session_state.last_error = None
     if "enable_indexing" not in st.session_state:
         st.session_state.enable_indexing = (
-            False  # Default enable indexing functionality
+            True  # Default enable indexing functionality - COMPREHENSIVE mode
         )
 
     # Requirement analysis related states
