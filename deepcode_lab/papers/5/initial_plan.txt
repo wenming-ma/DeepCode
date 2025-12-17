@@ -1,0 +1,543 @@
+Based on the comprehensive analysis provided, I now have all the information needed to create a detailed reproduction plan for DeepCode. Let me search for any additional implementation details that might be helpful.
+[Calling tool brave_brave_web_search with args {'query': 'DeepCode Open Agentic Coding paper implementation github', 'count': 5}]
+[Calling tool brave_brave_web_search with args {'query': 'PaperBench Code-Dev benchmark evaluation metrics SimpleJudge', 'count': 5}]
+Now I have comprehensive information about DeepCode and the evaluation methodology. Let me create the complete reproduction plan:
+
+```yaml
+complete_reproduction_plan:
+  paper_info:
+    title: "DeepCode: Open Agentic Coding"
+    core_contribution: "A fully autonomous framework for high-fidelity document-to-codebase synthesis that treats repository synthesis as a channel optimization problem through principled information-flow management via four strategic operations: source compression (blueprint distillation), structured indexing (CodeMem), conditional knowledge injection (CodeRAG), and closed-loop error correction (verification)"
+
+  # SECTION 1: File Structure Design
+
+  file_structure: |
+    deepcode/
+    ├── deepcode/
+    │   ├── __init__.py
+    │   ├── main.py                              # [PRIORITY 1] Entry point - run Paper2Code workflow
+    │   ├── orchestrator.py                      # [PRIORITY 1] Central Orchestrating Agent
+    │   │
+    │   ├── phase1_blueprint/                    # [PRIORITY 2] Blueprint Generation Phase
+    │   │   ├── __init__.py
+    │   │   ├── document_parser.py               # Document Parsing Agent
+    │   │   ├── content_segmenter.py             # Hierarchical Content Segmentation
+    │   │   ├── concept_agent.py                 # Concept Analysis Agent
+    │   │   ├── algorithm_agent.py               # Algorithm Extraction Agent
+    │   │   ├── planning_agent.py                # Code Planning Agent
+    │   │   └── schemas.py                       # Data structures for analysis schemas
+    │   │
+    │   ├── phase2_generation/                   # [PRIORITY 3] Code Generation Phase
+    │   │   ├── __init__.py
+    │   │   ├── code_generator.py                # Code Generation Agent
+    │   │   ├── code_memory.py                   # CodeMem implementation
+    │   │   ├── summarizer.py                    # Code summarization for memory entries
+    │   │   └── code_rag/
+    │   │       ├── __init__.py
+    │   │       ├── indexer.py                   # CodeRAG repository indexing
+    │   │       ├── retriever.py                 # Adaptive retrieval system
+    │   │       └── reference_miner.py           # Reference code mining
+    │   │
+    │   ├── phase3_verification/                 # [PRIORITY 4] Verification Phase
+    │   │   ├── __init__.py
+    │   │   ├── static_analyzer.py               # Static Analysis Agent
+    │   │   ├── modification_agent.py            # LSP-based Modification Agent
+    │   │   └── sandbox_executor.py              # Sandbox Execution Agent
+    │   │
+    │   ├── agents/                              # [PRIORITY 1] Base infrastructure
+    │   │   ├── __init__.py
+    │   │   ├── base_agent.py                    # Abstract base agent class
+    │   │   └── llm_interface.py                 # LLM API wrapper (Claude, GPT)
+    │   │
+    │   ├── mcp_tools/                           # [PRIORITY 2] MCP Tool Stack
+    │   │   ├── __init__.py
+    │   │   ├── brave_search.py                  # Web search for knowledge retrieval
+    │   │   ├── fetch.py                         # Web content ingestion
+    │   │   ├── filesystem.py                    # Sandboxed file I/O
+    │   │   ├── command_executor.py              # Shell command execution
+    │   │   └── git_command.py                   # Version control operations
+    │   │
+    │   ├── models/                              # [PRIORITY 1] Data structures
+    │   │   ├── __init__.py
+    │   │   ├── document.py                      # Source document model D=(d1,...,dL)
+    │   │   ├── repository.py                    # Code repository model P=(T,C,M)
+    │   │   ├── blueprint.py                     # Implementation blueprint model B
+    │   │   ├── memory_entry.py                  # Code memory entry model (Pt,It,Et)
+    │   │   └── rag_index.py                     # CodeRAG index model J
+    │   │
+    │   └── utils/
+    │       ├── __init__.py
+    │       ├── pdf_parser.py
+    │       └── logger.py
+    │
+    ├── config/
+    │   ├── settings.py
+    │   └── prompts/                             # Agent prompt templates
+    │       ├── concept_agent.yaml
+    │       ├── algorithm_agent.yaml
+    │       ├── planning_agent.yaml
+    │       ├── code_generation.yaml
+    │       └── verification.yaml
+    │
+    ├── tests/
+    │   ├── test_phase1/
+    │   ├── test_phase2/
+    │   └── test_phase3/
+    │
+    ├── requirements.txt                         # [LAST] Dependencies
+    └── README.md                                # [LAST] Documentation
+
+  # SECTION 2: Implementation Components
+
+  implementation_components: |
+    ## COMPONENT 1: Core Data Structures (models/)
+    
+    ### 1.1 Source Document Model (document.py)
+    - Definition: D = (d1, d2, ..., dL) - sequence of multimodal elements
+    - Element types: text blocks, equations, tables, figures, pseudocode
+    - Implementation: Pydantic model with element type discrimination
+    
+    ### 1.2 Code Repository Model (repository.py)
+    - Definition: P = (T, C, M) where T=directory tree, C=code files, M=manifest
+    - Methods: add_file(), get_structure(), validate_consistency()
+    
+    ### 1.3 Implementation Blueprint Model (blueprint.py)
+    - Sections: project_file_hierarchy, component_specification, verification_protocol, 
+      execution_environment, staged_development_plan
+    - Key methods: get_dependencies(file), get_implementation_order()
+    
+    ### 1.4 Memory Entry Model (memory_entry.py)
+    - Structure: mt = (Pt, It, Et) where:
+      - Pt: Core purpose (natural language summary)
+      - It: Public interface (classes, functions, signatures)
+      - Et: Dependency edges (afferent/efferent couplings)
+    - CodeMemory class with select_relevant_memory() method
+    
+    ### 1.5 RAG Index Model (rag_index.py)
+    - Tuple format: (c's, ĉt, τ, σ, γ) where:
+      - c's: source file path, ĉt: target blueprint file
+      - τ: relationship type (direct_impl, pattern_reference, utility)
+      - σ: confidence score [0,1], γ: actionable context
+    - Methods: retrieve(target_file, top_k), get_best_context()
+    
+    ## COMPONENT 2: Phase 1 - Blueprint Generation
+    
+    ### 2.1 Hierarchical Content Segmentation (content_segmenter.py)
+    Algorithm:
+    ```
+    def segment_document(D):
+        # Step 1: Structural Parsing
+        for element in D:
+            if is_section_header(element):
+                create_new_chunk(heading=element)
+            else:
+                append_to_current_chunk(element)
+        
+        # Step 2: Keyword-Chunk Association
+        S = {}
+        for chunk in chunks:
+            keywords = extract_keywords(chunk.heading)
+            S[chunk.heading] = (keywords, chunk.content)
+        return S  # Indexed structure
+    ```
+    
+    ### 2.2 Concept Agent (concept_agent.py)
+    - Purpose: High-level structural and conceptual mapping
+    - Input keywords: ["introduction", "method", "overview", "architecture", "framework"]
+    - Outputs Conceptual Analysis Schema:
+      1. Paper structure map - complete section breakdown
+      2. Method decomposition map - core functional components
+      3. Implementation map - claims to code requirements
+      4. Reproduction roadmap - success criteria checklist
+    
+    ### 2.3 Algorithm Agent (algorithm_agent.py)
+    - Purpose: Low-level technical detail extraction
+    - Input keywords: ["algorithm", "hyperparameter", "equation", "training", "loss"]
+    - Capability: Online search for reference implementations
+    - Outputs Algorithmic Implementation Schema:
+      1. Pseudocode - verbatim from algorithm boxes
+      2. Mathematical equations - exact formulations with variables
+      3. Network architectures - layer-by-layer specifications
+      4. Hyperparameters - complete list with paper references
+    
+    ### 2.4 Planning Agent (planning_agent.py)
+    - Inputs: Conceptual + Algorithmic Analysis Schemas
+    - Responsibility: Reconcile specifications, resolve inconsistencies
+    - Outputs Implementation Blueprint B with all 5 sections
+    
+    ## COMPONENT 3: Phase 2 - Code Generation
+    
+    ### 3.1 CodeMem - Stateful Generation (code_memory.py)
+    Core Algorithm:
+    ```
+    def generate_repository(B, L):
+        C = set()  # Implemented files
+        M = {}     # Code Memory
+        
+        for t, target_file in enumerate(B.staged_development_plan):
+            # Step 1: Context Formulation
+            Xt = (B, SelectRelevantMemory(M, target_file))
+            
+            # Step 2: Code Generation
+            ct = L(Xt)  # LLM call
+            C.add(ct)
+            
+            # Step 3: Memory Update
+            mt = summarize_code(ct)  # Extract (Pt, It, Et)
+            M[target_file] = mt
+        
+        return C, M
+    ```
+    
+    SelectRelevantMemory: Identify dependencies from blueprint, return memory entries
+    for files the target depends on.
+    
+    ### 3.2 CodeRAG - Knowledge Injection (code_rag/)
+    
+    Indexing Phase (indexer.py):
+    ```
+    def build_coderag_index(R, B, L):
+        J = []
+        for Rk in R:  # Reference repositories
+            # Step 1: Relevance Filtering
+            relevant_files = filter_relevant_files(Rk, B, L)
+            
+            # Step 2: Code Understanding
+            summaries = {f: analyze_code_file(f, L) for f in relevant_files}
+            
+            # Step 3: Relationship Mapping
+            for source_file, summary in summaries.items():
+                mappings = map_to_blueprint(summary, B, L)
+                for (target, rel_type, confidence, context) in mappings:
+                    J.append((source_file, target, rel_type, confidence, context))
+        return J
+    ```
+    
+    Retrieval Phase (retriever.py):
+    ```
+    def generate_with_rag(Xt, target_file, J, L):
+        # Adaptive Decision
+        rt = decide_retrieval(Xt, target_file)  # δ(Xt, ĉt) ∈ {0,1}
+        
+        if rt == 1:
+            relevant = retrieve_from_index(J, target_file)
+            best = max(relevant, key=lambda x: x.confidence)
+            X_prime_t = Xt + best.context
+            return L(X_prime_t)
+        return L(Xt)
+    ```
+    
+    Decision function: Based on task complexity and blueprint detail level
+    
+    ## COMPONENT 4: Phase 3 - Verification and Refinement
+    
+    ### 4.1 Static Analysis (static_analyzer.py)
+    - Analysis Agent: Astatic(P, B) → Rstatic
+    - Issues detected:
+      - Structural discrepancies (missing/empty files)
+      - Code quality deficiencies (style, complexity)
+    
+    ### 4.2 Modification Agent (modification_agent.py)
+    - Tool: LSP-inspired line-level modifications
+    - Input: Static analysis report + repository
+    - Output: Statically refined repository P'
+    
+    ### 4.3 Sandbox Execution (sandbox_executor.py)
+    Algorithm:
+    ```
+    def sandbox_verification(P_prime, B, max_iterations=10):
+        P_j = P_prime
+        
+        for j in range(max_iterations):
+            if j == 0:
+                verify_and_setup_environment(P_j, B)
+            
+            T_j = execute_in_sandbox(P_j)
+            
+            if T_j.errors is None:
+                return P_j  # Success
+            
+            P_j = apply_lsp_corrections(P_j, T_j.errors)
+        
+        return P_j  # Max iterations reached
+    ```
+    
+    ## COMPONENT 5: Central Orchestrator (orchestrator.py)
+    
+    Full Pipeline:
+    ```
+    def run_deepcode(document_path: str) -> Repository:
+        # Phase 1: Blueprint Generation
+        D = parse_document(document_path)
+        S = segment_document(D)
+        conceptual_schema = concept_agent.execute(S)
+        algorithmic_schema = algorithm_agent.execute(S)
+        blueprint = planning_agent.execute(conceptual_schema, algorithmic_schema)
+        
+        # Phase 2: Code Generation
+        rag_index = build_coderag_index(reference_repos, blueprint)
+        generated_files, memory = code_generator.execute(blueprint, rag_index)
+        P = Repository(generated_files)
+        
+        # Phase 3: Verification
+        Rstatic = static_analyzer.analyze(P, blueprint)
+        P_prime = modification_agent.refine(P, Rstatic)
+        P_final = sandbox_executor.verify_and_correct(P_prime, blueprint)
+        
+        return P_final
+    ```
+
+  # SECTION 3: Validation & Evaluation
+
+  validation_approach: |
+    ## PRIMARY EVALUATION: PaperBench Code-Dev Benchmark
+    
+    ### Benchmark Details
+    - Dataset: 20 ICML papers, 8316 gradable components
+    - Evaluation: SimpleJudge with hierarchical weighted scoring
+    - F1 score: 0.83 on JudgeEval auxiliary dataset
+    
+    ### Target Metrics (from paper)
+    - DeepCode target: 73.5±2.8 replication score
+    - Baseline comparisons:
+      - Best LLM agent (o1): 43.3±1.1
+      - Cursor: 0.5841 avg on 5-paper subset
+      - Human PhD experts: 72.4 Best@3
+    
+    ## ABLATION STUDIES TO REPRODUCE
+    
+    ### 1. CodeRAG Ablation
+    - Expected: Up to 70% relative gain on weaker models
+    - Test: Run with/without RAG on Claude 3.5 Sonnet and GPT-4o
+    - Measure: Replication score difference
+    
+    ### 2. CodeMem Ablation
+    - Expected: Scores drop from 0.70-0.92 to 0.33-0.43 without CodeMem
+    - Test: Generate code without memory context
+    - Measure: Cross-file consistency, import correctness
+    
+    ### 3. Verification Phase Ablation
+    - Expected: Consistent 3.7-6.5% gains from verification
+    - Test: Compare pre-verification vs post-verification scores
+    - Measure: Execution success rate, error count reduction
+    
+    ## UNIT TESTING CHECKLIST
+    
+    ### Phase 1 Tests
+    - [ ] Document parser extracts all sections from PDF/Markdown
+    - [ ] Hierarchical index associates keywords correctly
+    - [ ] Concept Agent generates complete schema (4 maps)
+    - [ ] Algorithm Agent extracts pseudocode, equations, hyperparameters
+    - [ ] Planning Agent produces valid blueprint (5 sections)
+    
+    ### Phase 2 Tests
+    - [ ] CodeMem tracks implemented files and interfaces
+    - [ ] Memory selection retrieves only relevant dependencies
+    - [ ] CodeRAG indexer maps reference code to blueprint correctly
+    - [ ] Adaptive retrieval decisions based on complexity
+    - [ ] Cross-file imports work correctly
+    
+    ### Phase 3 Tests
+    - [ ] Static analyzer detects missing/empty files
+    - [ ] Modification agent applies LSP-style fixes
+    - [ ] Sandbox executes in isolated environment
+    - [ ] Iterative correction converges on working code
+    
+    ## END-TO-END VALIDATION
+    
+    ### Test Case 1: Simple Paper Reproduction
+    - Input: Single well-documented ML paper with algorithm box
+    - Expected: Repository with core algorithm implemented
+    - Success: Code executes without errors, produces expected output shape
+    
+    ### Test Case 2: Complex Multi-Component Paper
+    - Input: Paper with multiple interconnected algorithms
+    - Expected: Repository with correct cross-file dependencies
+    - Success: All imports resolve, CodeMem maintains consistency
+    
+    ### Test Case 3: Under-specified Paper
+    - Input: Paper with implicit implementation details
+    - Expected: CodeRAG fills gaps from reference implementations
+    - Success: Generated code follows common patterns, is functional
+
+  # SECTION 4: Environment & Dependencies
+
+  environment_setup: |
+    ## Python Environment
+    python_version: ">=3.10"
+    
+    ## Core Dependencies (requirements.txt)
+    ```
+    # LLM APIs
+    anthropic>=0.34.0
+    openai>=1.40.0
+    
+    # Data validation
+    pydantic>=2.0.0
+    pyyaml>=6.0
+    
+    # Document processing
+    pypdf>=4.0.0
+    pymupdf>=1.24.0  # For better PDF parsing
+    markdown>=3.5
+    
+    # Code analysis
+    tree-sitter>=0.20.0
+    tree-sitter-python>=0.20.0
+    
+    # RAG components
+    chromadb>=0.4.0
+    sentence-transformers>=2.2.0
+    
+    # HTTP and search
+    httpx>=0.25.0
+    aiohttp>=3.9.0
+    
+    # Utilities
+    tenacity>=8.2.0  # For retry logic
+    rich>=13.0.0     # For progress display
+    ```
+    
+    ## Development Dependencies
+    ```
+    pytest>=7.0.0
+    pytest-asyncio>=0.21.0
+    black>=23.0.0
+    mypy>=1.0.0
+    ruff>=0.1.0
+    ```
+    
+    ## External Services Required
+    - LLM API: Claude API (Anthropic) or OpenAI API
+    - Web Search: Brave Search API (optional, for Algorithm Agent)
+    - GitHub API: For reference repository mining (optional)
+    
+    ## Hardware Requirements
+    - Minimum: 8GB RAM, modern multi-core CPU
+    - Recommended: 16GB RAM for handling large documents
+    - Optional: GPU for local embedding models (sentence-transformers)
+    
+    ## Environment Variables
+    ```
+    ANTHROPIC_API_KEY=<your-key>
+    OPENAI_API_KEY=<your-key>  # Optional
+    BRAVE_API_KEY=<your-key>   # Optional
+    ```
+
+  # SECTION 5: Implementation Strategy
+
+  implementation_strategy: |
+    ## PHASE 1: Core Infrastructure (Week 1)
+    
+    ### Step 1.1: Project Setup
+    - Initialize project structure with all directories
+    - Create requirements.txt and setup.py
+    - Configure logging and settings
+    
+    ### Step 1.2: Base Agent Framework
+    Files: agents/base_agent.py, agents/llm_interface.py
+    - Abstract base class with prompt template handling
+    - LLM wrapper supporting Claude and OpenAI
+    - Async support for parallel operations
+    - YAML response parsing utilities
+    
+    ### Step 1.3: Data Models
+    Files: models/*.py
+    - Implement all Pydantic models
+    - Document, Repository, Blueprint, MemoryEntry, RAGIndex
+    - Add serialization/deserialization methods
+    
+    Verification: Unit tests for model validation
+    
+    ## PHASE 2: Blueprint Generation (Week 2)
+    
+    ### Step 2.1: Document Processing
+    Files: document_parser.py, content_segmenter.py
+    - PDF extraction with multimodal support
+    - Section boundary detection algorithm
+    - Keyword-chunk association indexing
+    
+    ### Step 2.2: Analysis Agents
+    Files: concept_agent.py, algorithm_agent.py
+    - Implement segmented reading strategy
+    - Conceptual Analysis Schema generation
+    - Algorithmic Implementation Schema extraction
+    - Web search integration for implementations
+    
+    ### Step 2.3: Planning Agent
+    Files: planning_agent.py, schemas.py
+    - Schema reconciliation logic
+    - Blueprint synthesis with all 5 sections
+    - Dependency graph construction
+    
+    Verification: Test on sample paper, verify blueprint completeness
+    
+    ## PHASE 3: Code Generation (Week 3-4)
+    
+    ### Step 3.1: CodeMem Implementation
+    Files: code_memory.py, summarizer.py
+    - Memory entry creation (Pt, It, Et extraction)
+    - Relevant memory selection algorithm
+    - Interface signature extraction using tree-sitter
+    
+    ### Step 3.2: CodeRAG Implementation
+    Files: code_rag/indexer.py, retriever.py, reference_miner.py
+    - Repository relevance filtering
+    - Code understanding and summarization
+    - Relationship mapping to blueprint
+    - Adaptive retrieval decision function
+    - ChromaDB integration for vector storage
+    
+    ### Step 3.3: Code Generator
+    Files: code_generator.py
+    - Iterative file generation loop
+    - Memory context injection
+    - RAG context augmentation
+    - Code extraction from LLM responses
+    
+    Verification: Generate multi-file repo, test import correctness
+    
+    ## PHASE 4: Verification System (Week 5)
+    
+    ### Step 4.1: Static Analysis
+    Files: static_analyzer.py, modification_agent.py
+    - Structural integrity checking
+    - Code quality assessment
+    - LSP-style line-level modifications
+    
+    ### Step 4.2: Sandbox Execution
+    Files: sandbox_executor.py
+    - Isolated environment setup
+    - Error trace capture and parsing
+    - Iterative correction loop (max 10 iterations)
+    
+    Verification: End-to-end pipeline test with error injection
+    
+    ## PHASE 5: Integration & Optimization (Week 6)
+    
+    ### Step 5.1: Orchestrator
+    Files: orchestrator.py, main.py
+    - Full pipeline coordination
+    - Error handling and recovery
+    - Progress tracking with rich
+    
+    ### Step 5.2: Prompt Engineering
+    Files: config/prompts/*.yaml
+    - Optimize agent prompts
+    - Add few-shot examples
+    - Handle edge cases
+    
+    ### Step 5.3: Documentation
+    Files: README.md, requirements.txt
+    - Complete usage documentation
+    - Installation instructions
+    - Example workflows
+    
+    ## HANDLING MISSING DETAILS
+    
+    1. Prompt templates: Use paper's described approach, refine empirically
+    2. Threshold values for retrieval decision: Start with complexity > 0.5
+    3. Memory selection heuristics: Use dependency graph from blueprint
+    4. Error parsing patterns: Build pattern library incrementally
+    5. Embedding model: Default to "all-MiniLM-L6-v2" for code similarity
+```
