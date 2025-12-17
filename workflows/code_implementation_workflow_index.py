@@ -454,36 +454,55 @@ Requirements:
     # ==================== 4. MCP Agent and LLM Communication Management (Communication Layer) ====================
 
     async def _initialize_mcp_agent(self, code_directory: str):
-        """Initialize MCP agent and connect to code-implementation server"""
-        try:
-            self.mcp_agent = Agent(
-                name="CodeImplementationAgent",
-                instruction="You are a code implementation assistant, using MCP tools to implement paper code replication.",
-                server_names=["code-implementation", "code-reference-indexer"],
-            )
+        """Initialize MCP agent and connect to code-implementation server (with retry)"""
+        max_retries = 3
+        last_exception = None
 
-            await self.mcp_agent.__aenter__()
-            llm = await self.mcp_agent.attach_llm(
-                get_preferred_llm_class(self.config_path)
-            )
+        for attempt in range(max_retries):
+            try:
+                self.mcp_agent = Agent(
+                    name="CodeImplementationAgent",
+                    instruction="You are a code implementation assistant, using MCP tools to implement paper code replication.",
+                    server_names=["code-implementation", "code-reference-indexer"],
+                )
 
-            # Set workspace to the target code directory
-            workspace_result = await self.mcp_agent.call_tool(
-                "set_workspace", {"workspace_path": code_directory}
-            )
-            self.logger.info(f"Workspace setup result: {workspace_result}")
+                await self.mcp_agent.__aenter__()
+                llm = await self.mcp_agent.attach_llm(
+                    get_preferred_llm_class(self.config_path)
+                )
 
-            return llm
+                # Set workspace to the target code directory
+                workspace_result = await self.mcp_agent.call_tool(
+                    "set_workspace", {"workspace_path": code_directory}
+                )
+                self.logger.info(f"Workspace setup result: {workspace_result}")
+                self.logger.info(f"MCP Agent initialized successfully")
 
-        except Exception as e:
-            self.logger.error(f"Failed to initialize MCP agent: {e}")
-            if self.mcp_agent:
-                try:
-                    await self.mcp_agent.__aexit__(None, None, None)
-                except Exception:
-                    pass
-                self.mcp_agent = None
-            raise
+                return llm
+
+            except Exception as e:
+                last_exception = e
+                self.logger.warning(
+                    f"MCP Agent initialization failed (attempt {attempt + 1}/{max_retries}): {e}"
+                )
+
+                # Clean up failed connection
+                if self.mcp_agent:
+                    try:
+                        await self.mcp_agent.__aexit__(None, None, None)
+                    except Exception:
+                        pass
+                    self.mcp_agent = None
+
+                if attempt < max_retries - 1:
+                    delay = 2 ** attempt  # 1, 2, 4 seconds
+                    self.logger.info(f"Retrying in {delay} seconds...")
+                    await asyncio.sleep(delay)
+                else:
+                    self.logger.error(
+                        f"MCP Agent initialization failed after {max_retries} attempts"
+                    )
+                    raise last_exception
 
     async def _cleanup_mcp_agent(self):
         """Clean up MCP agent resources"""
@@ -673,25 +692,80 @@ Requirements:
     async def _call_anthropic_with_tools(
         self, client, system_message, messages, tools, max_tokens
     ):
-        """Call Anthropic API"""
+        """Call Anthropic API with retry mechanism and streaming support"""
         validated_messages = self._validate_messages(messages)
         if not validated_messages:
             validated_messages = [
                 {"role": "user", "content": "Please continue implementing code"}
             ]
 
-        try:
-            response = await client.messages.create(
-                model=self.default_models["anthropic"],
-                system=system_message,
-                messages=validated_messages,
-                tools=tools,
-                max_tokens=max_tokens,
-                temperature=0.2,
-            )
-        except Exception as e:
-            self.logger.error(f"Anthropic API call failed: {e}")
-            raise
+        # Retry mechanism for API calls
+        max_retries = 5
+        retry_delay = 2  # seconds
+        response = None
+
+        for attempt in range(max_retries):
+            try:
+                # Use streaming to avoid timeout for long-running requests (required for Opus models)
+                async with client.messages.stream(
+                    model=self.default_models["anthropic"],
+                    system=system_message,
+                    messages=validated_messages,
+                    tools=tools,
+                    max_tokens=max_tokens,
+                    temperature=0.2,
+                ) as stream:
+                    response = await stream.get_final_message()
+                break  # Success, exit retry loop
+
+            except (ConnectionError, TimeoutError, asyncio.TimeoutError, OSError) as e:
+                # Network-related errors - most likely to benefit from retry
+                self.logger.warning(
+                    f"Anthropic network error (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {e}"
+                )
+
+                if attempt < max_retries - 1:
+                    self.logger.info(f"Retrying in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    self.logger.error(f"Anthropic API - all {max_retries} retries exhausted")
+                    raise
+
+            except Exception as e:
+                # Check if it's a rate limit error
+                is_rate_limit = (
+                    hasattr(e, 'status_code') and e.status_code in (429, 503)
+                ) or 'rate limit' in str(e).lower() or 'overloaded' in str(e).lower()
+
+                if is_rate_limit:
+                    self.logger.warning(
+                        f"Anthropic rate limit (attempt {attempt + 1}/{max_retries}): {e}"
+                    )
+                    if attempt < max_retries - 1:
+                        retry_after = getattr(e, 'retry_after', retry_delay * 3)
+                        self.logger.info(f"Waiting {retry_after}s before retry...")
+                        await asyncio.sleep(retry_after)
+                        retry_delay *= 2
+                        continue
+                    else:
+                        raise
+
+                # Other errors
+                self.logger.warning(
+                    f"Anthropic API error (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {e}"
+                )
+
+                if attempt < max_retries - 1:
+                    self.logger.info(f"Retrying in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2
+                else:
+                    self.logger.error(f"Anthropic API call failed after {max_retries} attempts: {e}")
+                    raise
+
+        if response is None:
+            raise RuntimeError("Anthropic API returned no response after all retries")
 
         content = ""
         tool_calls = []
@@ -780,17 +854,71 @@ Requirements:
             ),
         )
 
-        try:
-            # Google Gemini API call using the native SDK
-            # client is google.genai.Client instance
-            response = await client.aio.models.generate_content(
-                model=self.default_models["google"],
-                contents=gemini_messages,
-                config=config,
-            )
-        except Exception as e:
-            self.logger.error(f"Google API call failed: {e}")
-            raise
+        # Retry mechanism for API calls
+        max_retries = 5
+        retry_delay = 2  # seconds
+        response = None
+
+        for attempt in range(max_retries):
+            try:
+                # Google Gemini API call using the native SDK
+                # client is google.genai.Client instance
+                response = await client.aio.models.generate_content(
+                    model=self.default_models["google"],
+                    contents=gemini_messages,
+                    config=config,
+                )
+                break  # Success, exit retry loop
+
+            except (ConnectionError, TimeoutError, asyncio.TimeoutError, OSError) as e:
+                # Network-related errors - most likely to benefit from retry
+                self.logger.warning(
+                    f"Google network error (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {e}"
+                )
+
+                if attempt < max_retries - 1:
+                    self.logger.info(f"Retrying in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    self.logger.error(f"Google API - all {max_retries} retries exhausted")
+                    raise
+
+            except Exception as e:
+                # Check if it's a rate limit or quota error
+                error_str = str(e).lower()
+                is_rate_limit = (
+                    hasattr(e, 'status_code') and e.status_code in (429, 503)
+                ) or 'rate limit' in error_str or 'quota' in error_str or 'resource exhausted' in error_str
+
+                if is_rate_limit:
+                    self.logger.warning(
+                        f"Google rate limit/quota (attempt {attempt + 1}/{max_retries}): {e}"
+                    )
+                    if attempt < max_retries - 1:
+                        retry_after = retry_delay * 3  # Longer wait for rate limits
+                        self.logger.info(f"Waiting {retry_after}s before retry...")
+                        await asyncio.sleep(retry_after)
+                        retry_delay *= 2
+                        continue
+                    else:
+                        raise
+
+                # Other errors
+                self.logger.warning(
+                    f"Google API error (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {e}"
+                )
+
+                if attempt < max_retries - 1:
+                    self.logger.info(f"Retrying in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2
+                else:
+                    self.logger.error(f"Google API call failed after {max_retries} attempts: {e}")
+                    raise
+
+        if response is None:
+            raise RuntimeError("Google API returned no response after all retries")
 
         # Parse Gemini response (types.GenerateContentResponse)
         # Following the pattern from augmented_llm_google.py lines 145-165
@@ -1003,8 +1131,8 @@ Requirements:
         openai_messages = [{"role": "system", "content": system_message}]
         openai_messages.extend(messages)
 
-        # Retry mechanism for API calls
-        max_retries = 3
+        # Retry mechanism for API calls (enhanced with more exception types)
+        max_retries = 5  # Increased from 3
         retry_delay = 2  # seconds
 
         for attempt in range(max_retries):
@@ -1049,6 +1177,26 @@ Requirements:
                 # Successfully got a valid response
                 break
 
+            except (ConnectionError, TimeoutError, asyncio.TimeoutError, OSError) as e:
+                # Network-related errors - most likely to benefit from retry
+                self.logger.warning(
+                    f"Network error (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {e}"
+                )
+
+                if attempt < max_retries - 1:
+                    # Check for rate limiting
+                    if hasattr(e, 'status_code') and e.status_code in (429, 503):
+                        retry_after = getattr(e, 'retry_after', retry_delay * 3)
+                        self.logger.info(f"Rate limit detected, waiting {retry_after}s...")
+                        await asyncio.sleep(retry_after)
+                    else:
+                        self.logger.info(f"Retrying in {retry_delay}s...")
+                        await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    self.logger.error(f"Network error - all {max_retries} retries exhausted")
+                    raise
+
             except json.JSONDecodeError as e:
                 print(
                     f"\n❌ JSON Decode Error in API response (attempt {attempt + 1}/{max_retries}):"
@@ -1082,6 +1230,24 @@ Requirements:
                     }
 
             except Exception as e:
+                # Check if it's a rate limit error
+                is_rate_limit = (
+                    hasattr(e, 'status_code') and e.status_code in (429, 503)
+                ) or 'rate limit' in str(e).lower()
+
+                if is_rate_limit:
+                    self.logger.warning(
+                        f"Rate limit error (attempt {attempt + 1}/{max_retries}): {e}"
+                    )
+                    if attempt < max_retries - 1:
+                        retry_after = getattr(e, 'retry_after', retry_delay * 3)
+                        self.logger.info(f"Waiting {retry_after}s before retry...")
+                        await asyncio.sleep(retry_after)
+                        retry_delay *= 2
+                        continue
+                    else:
+                        raise
+
                 print(
                     f"\n❌ Unexpected API Error (attempt {attempt + 1}/{max_retries}):"
                 )
