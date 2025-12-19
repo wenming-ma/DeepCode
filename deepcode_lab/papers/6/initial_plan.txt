@@ -1,0 +1,400 @@
+[Calling tool brave_brave_web_search with args {'query': 'flip-chip routing RDL layer routing algorithm MCMF network flow VLSI'}]
+[Calling tool brave_brave_web_search with args {'query': 'minimum cost maximum flow MCMF algorithm implementation pseudocode'}]
+[Calling tool brave_brave_web_search with args {'query': 'river routing algorithm VLSI channel routing single layer'}]
+[Calling tool brave_brave_web_search with args {'query': 'bump pad IO pad redistribution layer flip chip package routing'}]
+Based on the search results and the provided agent responses, I can now synthesize a comprehensive reproduction plan for the flip-chip RDL routing algorithm paper. Let me compile the complete plan:
+
+```yaml
+complete_reproduction_plan:
+  paper_info:
+    title: "A Network-Flow-Based RDL Routing Algorithm for Flip-Chip Design"
+    core_contribution: "First router for flip-chip package using two-stage approach: global routing via minimum-cost maximum-flow (MCMF) algorithm to assign wire-bonding pads to bump pads, followed by detailed routing using river routing methodology for single-layer RDL interconnection"
+
+  # SECTION 1: File Structure Design
+
+  file_structure: |
+    flip_chip_rdl_router/
+    ├── src/
+    │   ├── core/
+    │   │   ├── __init__.py
+    │   │   ├── mcmf.py                    # [PRIORITY 1] Min-cost max-flow algorithm
+    │   │   ├── network_builder.py         # [PRIORITY 1] Flow network construction
+    │   │   ├── river_router.py            # [PRIORITY 2] River routing detailed router
+    │   │   └── geometry.py                # [PRIORITY 2] Geometric primitives
+    │   ├── routing/
+    │   │   ├── __init__.py
+    │   │   ├── global_router.py           # [PRIORITY 1] Global routing using MCMF
+    │   │   ├── detailed_router.py         # [PRIORITY 2] Detailed routing implementation
+    │   │   ├── net_ordering.py            # [PRIORITY 2] Net ordering for river routing
+    │   │   └── layer_assignment.py        # [PRIORITY 3] RDL layer assignment
+    │   ├── data_structures/
+    │   │   ├── __init__.py
+    │   │   ├── chip.py                    # [PRIORITY 1] Chip/package representation
+    │   │   ├── bump_pad.py                # [PRIORITY 1] Bump pad data structure
+    │   │   ├── io_pad.py                  # [PRIORITY 1] IO pad data structure
+    │   │   └── net.py                     # [PRIORITY 1] Net/wire representation
+    │   └── utils/
+    │       ├── __init__.py
+    │       ├── parser.py                  # [PRIORITY 3] Input file parser
+    │       └── visualizer.py              # [PRIORITY 4] Routing visualization
+    ├── experiments/
+    │   ├── run_experiments.py             # [PRIORITY 3] Main experiment runner
+    │   ├── benchmarks/                    # [PRIORITY 3] Test benchmark cases
+    │   └── evaluate.py                    # [PRIORITY 3] Result evaluation
+    ├── main.py                            # [PRIORITY 3] Main entry point
+    ├── config.yaml                        # [PRIORITY 4] Configuration file
+    ├── requirements.txt                   # [LAST] Dependencies
+    └── README.md                          # [LAST] Documentation
+
+  # SECTION 2: Implementation Components
+
+  implementation_components: |
+    ## COMPONENT 1: Minimum-Cost Maximum-Flow (MCMF) Algorithm
+    **File**: src/core/mcmf.py
+    **Purpose**: Core algorithm for global routing optimization
+    
+    **Algorithm - Successive Shortest Path with Bellman-Ford**:
+    ```
+    class MCMF:
+        def __init__(self, n_nodes):
+            self.capacity = [[0]*n for _ in range(n)]  # Edge capacities
+            self.cost = [[0]*n for _ in range(n)]      # Cost per unit flow
+            self.flow = [[0]*n for _ in range(n)]      # Current flow
+            self.dist = [INF]*n                         # Distances
+            self.parent = [-1]*n                        # Parent pointers
+        
+        def add_edge(self, u, v, cap, cost):
+            # Add edge u->v with capacity cap and cost
+            self.capacity[u][v] = cap
+            self.cost[u][v] = cost
+            self.cost[v][u] = -cost  # Reverse edge cost
+        
+        def bellman_ford(self, src, sink):
+            # Find shortest path from src to sink
+            dist = [INF] * n
+            dist[src] = 0
+            parent = [-1] * n
+            for _ in range(n-1):
+                for u in range(n):
+                    for v in adjacent[u]:
+                        if capacity[u][v] - flow[u][v] > 0:
+                            if dist[u] + cost[u][v] < dist[v]:
+                                dist[v] = dist[u] + cost[u][v]
+                                parent[v] = u
+            return dist[sink] < INF, parent
+        
+        def min_cost_max_flow(self, src, sink):
+            total_flow = 0
+            total_cost = 0
+            while True:
+                found, parent = bellman_ford(src, sink)
+                if not found:
+                    break
+                # Find minimum capacity along path
+                path_flow = INF
+                v = sink
+                while v != src:
+                    u = parent[v]
+                    path_flow = min(path_flow, capacity[u][v] - flow[u][v])
+                    v = u
+                # Augment flow along path
+                v = sink
+                while v != src:
+                    u = parent[v]
+                    flow[u][v] += path_flow
+                    flow[v][u] -= path_flow
+                    total_cost += path_flow * cost[u][v]
+                    v = u
+                total_flow += path_flow
+            return total_flow, total_cost
+    ```
+    
+    ## COMPONENT 2: Flow Network Construction
+    **File**: src/core/network_builder.py
+    **Purpose**: Build flow network from chip layout
+    
+    **Network Structure**:
+    - Source node S connected to all IO pads
+    - IO pad nodes (one per IO buffer)
+    - Bump pad nodes (one per bump ball)
+    - Sink node T connected from all bump pads
+    
+    **Edge Construction**:
+    ```
+    def build_network(io_pads, bump_pads, constraints):
+        # Source to IO pads: capacity=1, cost=0
+        for io in io_pads:
+            add_edge(SOURCE, io.node_id, cap=1, cost=0)
+        
+        # IO pads to bump pads: capacity=1, cost=manhattan_distance
+        for io in io_pads:
+            for bump in bump_pads:
+                if is_valid_assignment(io, bump):
+                    dist = manhattan_distance(io.pos, bump.pos)
+                    add_edge(io.node_id, bump.node_id, cap=1, cost=dist)
+        
+        # Bump pads to sink: capacity=bump_capacity, cost=0
+        for bump in bump_pads:
+            add_edge(bump.node_id, SINK, cap=bump.capacity, cost=0)
+    ```
+    
+    ## COMPONENT 3: Global Router
+    **File**: src/routing/global_router.py
+    **Purpose**: Assign IO pads to bump pads using MCMF
+    
+    **Algorithm**:
+    ```
+    def global_route(chip):
+        network = build_network(chip.io_pads, chip.bump_pads)
+        flow, cost = mcmf.min_cost_max_flow(SOURCE, SINK)
+        
+        # Extract assignments from flow
+        assignments = []
+        for io in chip.io_pads:
+            for bump in chip.bump_pads:
+                if flow[io.node_id][bump.node_id] > 0:
+                    assignments.append((io, bump))
+        return assignments
+    ```
+    
+    ## COMPONENT 4: River Routing Algorithm
+    **File**: src/core/river_router.py
+    **Purpose**: Detailed single-layer routing with planarity constraint
+    
+    **Key Constraint**: No wire crossings allowed (planar routing)
+    
+    **River Routing Algorithm**:
+    ```
+    def river_route(io_pads, bump_pads, assignments):
+        # Sort terminals by position
+        io_sorted = sort_by_x(io_pads)
+        
+        # Check routability (no crossing constraint)
+        for i in range(len(assignments)-1):
+            if crossing_exists(assignments[i], assignments[i+1]):
+                return None  # Not routable
+        
+        # Generate routes maintaining planarity
+        routes = []
+        for io, bump in assignments:
+            route = generate_manhattan_path(io.pos, bump.pos, existing_routes)
+            routes.append(route)
+        return routes
+    
+    def generate_manhattan_path(start, end, obstacles):
+        # L-shaped or Z-shaped routing
+        if no_obstacle_between(start, end):
+            return l_shape_route(start, end)
+        else:
+            return z_shape_route(start, end, obstacles)
+    ```
+    
+    ## COMPONENT 5: Net Ordering for River Routing
+    **File**: src/routing/net_ordering.py
+    **Purpose**: Determine routing order to avoid conflicts
+    
+    **Algorithm**:
+    ```
+    def order_nets(assignments):
+        # Build precedence graph
+        precedence = {}
+        for i, (io_i, bump_i) in enumerate(assignments):
+            for j, (io_j, bump_j) in enumerate(assignments):
+                if must_route_before(i, j):
+                    precedence[i].append(j)
+        
+        # Topological sort
+        return topological_sort(precedence)
+    
+    def must_route_before(net_i, net_j):
+        # Net i must be routed before net j if:
+        # - io_i.x < io_j.x and bump_i.x > bump_j.x (crossing)
+        return check_crossing_condition(net_i, net_j)
+    ```
+    
+    ## COMPONENT 6: Data Structures
+    **File**: src/data_structures/
+    
+    **Chip Class**:
+    ```
+    class Chip:
+        def __init__(self):
+            self.io_pads = []      # List of IO pads on die periphery
+            self.bump_pads = []    # Grid of bump pads
+            self.rdl_layers = 1    # Number of RDL layers
+            self.pitch = 100       # Bump pitch (um)
+    ```
+    
+    **BumpPad Class**:
+    ```
+    class BumpPad:
+        def __init__(self, x, y, capacity=1):
+            self.x = x
+            self.y = y
+            self.capacity = capacity  # Number of IOs that can connect
+            self.assigned_ios = []
+    ```
+    
+    **IOPad Class**:
+    ```
+    class IOPad:
+        def __init__(self, x, y, net_id):
+            self.x = x
+            self.y = y
+            self.net_id = net_id
+            self.assigned_bump = None
+    ```
+
+  # SECTION 3: Validation & Evaluation
+
+  validation_approach: |
+    ## EXPERIMENT 1: Algorithm Correctness
+    **Objective**: Verify MCMF produces optimal flow
+    **Test Cases**:
+    - Small networks (10-20 nodes) with known optimal solutions
+    - Compare against reference MCMF implementations
+    **Success Criteria**: Matching flow values and costs
+    
+    ## EXPERIMENT 2: Routability Test
+    **Objective**: Verify river routing produces valid planar routes
+    **Validation**:
+    - Check no wire crossings in output
+    - Verify all nets are connected
+    - Validate Manhattan routing (90-degree turns only)
+    **Metrics**: Routability rate, DRC violations = 0
+    
+    ## EXPERIMENT 3: Benchmark Evaluation
+    **Test Cases** (from paper):
+    - Industrial flip-chip designs with varying IO counts
+    - Grid patterns: 10x10, 20x20, 50x50 bump arrays
+    - IO counts: 100, 500, 1000, 2000 IOs
+    
+    **Expected Results** (based on paper claims):
+    - 100% routability on standard configurations
+    - Total wirelength within 5% of theoretical minimum
+    - Runtime: O(n² log n) where n = number of nets
+    
+    ## EXPERIMENT 4: Scalability Analysis
+    **Test Configurations**:
+    | IOs  | Bumps | Expected Runtime |
+    |------|-------|------------------|
+    | 100  | 100   | < 1 sec         |
+    | 500  | 500   | < 10 sec        |
+    | 1000 | 1000  | < 60 sec        |
+    | 2000 | 2000  | < 5 min         |
+    
+    ## EXPERIMENT 5: Wirelength Optimization
+    **Objective**: Verify MCMF minimizes total wirelength
+    **Comparison**: Against greedy assignment
+    **Expected**: 10-20% improvement over greedy
+    
+    ## Validation Script Structure:
+    ```
+    def run_validation():
+        # Test 1: Unit tests for MCMF
+        test_mcmf_small_networks()
+        
+        # Test 2: Integration test
+        test_full_routing_pipeline()
+        
+        # Test 3: Benchmark evaluation
+        for benchmark in benchmarks:
+            result = route(benchmark)
+            assert result.routability == 100%
+            assert result.drc_errors == 0
+            log_metrics(result)
+    ```
+
+  # SECTION 4: Environment & Dependencies
+
+  environment_setup: |
+    ## Python Environment
+    - Python 3.8+ (recommended: 3.10)
+    
+    ## Core Dependencies (requirements.txt):
+    ```
+    numpy>=1.21.0           # Matrix operations for flow network
+    scipy>=1.7.0            # Sparse matrix support
+    networkx>=2.6           # Graph algorithms (optional, for validation)
+    matplotlib>=3.4.0       # Visualization
+    pyyaml>=5.4             # Configuration parsing
+    pytest>=6.2.0           # Testing framework
+    ```
+    
+    ## Optional Dependencies:
+    ```
+    numba>=0.54.0           # JIT compilation for performance
+    tqdm>=4.62.0            # Progress bars
+    ```
+    
+    ## Hardware Requirements:
+    - CPU: Any modern processor
+    - RAM: 4GB minimum, 8GB for large designs (2000+ IOs)
+    - GPU: Not required
+    
+    ## Installation:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # Linux/Mac
+    pip install -r requirements.txt
+    ```
+
+  # SECTION 5: Implementation Strategy
+
+  implementation_strategy: |
+    ## PHASE 1: Core Data Structures (Days 1-2)
+    1. Implement Chip, BumpPad, IOPad, Net classes
+    2. Create input parser for benchmark files
+    3. Unit test: Data structure creation and manipulation
+    
+    ## PHASE 2: MCMF Algorithm (Days 3-5)
+    1. Implement Bellman-Ford shortest path
+    2. Implement successive shortest path MCMF
+    3. Optimize with SPFA for better performance
+    4. Unit test: Small networks with known solutions
+    5. Verify O(VE) complexity per iteration
+    
+    ## PHASE 3: Flow Network Construction (Days 6-7)
+    1. Build network from chip layout
+    2. Add source/sink nodes
+    3. Set edge capacities (IO→bump based on constraints)
+    4. Set edge costs (Manhattan distance)
+    5. Integration test: Network matches expected structure
+    
+    ## PHASE 4: Global Router (Days 8-9)
+    1. Integrate MCMF with network builder
+    2. Extract IO-to-bump assignments from flow
+    3. Handle infeasible cases (insufficient capacity)
+    4. Test: Verify all IOs assigned, total flow correct
+    
+    ## PHASE 5: River Routing (Days 10-12)
+    1. Implement net ordering algorithm
+    2. Implement crossing detection
+    3. Implement L-shape and Z-shape routing
+    4. Maintain planarity constraint
+    5. Test: No DRC violations on output routes
+    
+    ## PHASE 6: Integration & Visualization (Days 13-14)
+    1. Connect global and detailed routing
+    2. Implement output generation (DEF/LEF or custom format)
+    3. Create visualization module
+    4. Full pipeline test on benchmarks
+    
+    ## PHASE 7: Experiments & Documentation (Days 15-16)
+    1. Run all benchmark experiments
+    2. Collect metrics (wirelength, runtime, routability)
+    3. Compare against paper results
+    4. Write README.md and documentation
+    
+    ## Handling Missing Details:
+    - Bump capacity: Default to 1 unless specified
+    - RDL layer count: Start with single layer (paper focus)
+    - Wire width/spacing: Use standard 10um/10um rules
+    - Routing grid: Align with bump pitch
+    
+    ## Testing Strategy:
+    - Unit tests for each module (pytest)
+    - Integration tests for full pipeline
+    - Regression tests for benchmark cases
+    - Performance profiling for scalability
+```

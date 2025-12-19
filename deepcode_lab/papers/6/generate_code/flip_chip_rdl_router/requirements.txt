@@ -1,0 +1,34 @@
+# Flip-Chip RDL Router Dependencies
+# ===================================
+# Core dependencies for the network-flow-based RDL routing algorithm
+
+# Core Dependencies
+# -----------------
+numpy>=1.21.0           # Matrix operations for flow network
+scipy>=1.7.0            # Sparse matrix support and optimization
+networkx>=2.6           # Graph algorithms (optional, for validation)
+matplotlib>=3.4.0       # Visualization of routing results
+pyyaml>=5.4             # Configuration file parsing (YAML format)
+
+# Testing Framework
+# -----------------
+pytest>=6.2.0           # Unit and integration testing
+pytest-cov>=2.12.0      # Test coverage reporting
+
+# Optional Performance Dependencies
+# ---------------------------------
+# Uncomment these for improved performance on large designs
+# numba>=0.54.0         # JIT compilation for performance-critical code
+# tqdm>=4.62.0          # Progress bars for long-running operations
+
+# Development Dependencies (optional)
+# -----------------------------------
+# black>=21.0           # Code formatting
+# flake8>=3.9.0         # Code linting
+# mypy>=0.910           # Static type checking
+# isort>=5.9.0          # Import sorting
+
+# Documentation (optional)
+# ------------------------
+# sphinx>=4.0.0         # Documentation generation
+# sphinx-rtd-theme>=0.5 # ReadTheDocs theme

@@ -1,0 +1,222 @@
+# Flip-Chip RDL Router Configuration
+# ====================================
+# Default configuration file for the network-flow-based RDL routing algorithm
+# All dimensions are in micrometers (um) unless otherwise specified
+
+# Version information
+version: "1.0.0"
+config_name: "default"
+
+# =============================================================================
+# CHIP CONFIGURATION
+# =============================================================================
+chip:
+  # Chip/die dimensions
+  name: "default_chip"
+  die_width: 5000.0          # Die width in um
+  die_height: 5000.0         # Die height in um
+  
+  # RDL layer configuration
+  rdl_layers: 1              # Number of RDL layers (1 for single-layer routing)
+  
+  # Bump pad configuration
+  bump:
+    pitch: 100.0             # Bump pitch (center-to-center spacing) in um
+    diameter: 80.0           # Bump pad diameter in um
+    capacity: 1              # Number of IOs per bump (typically 1)
+    grid_rows: 10            # Number of bump rows
+    grid_cols: 10            # Number of bump columns
+    origin_x: 500.0          # X offset of bump grid origin
+    origin_y: 500.0          # Y offset of bump grid origin
+  
+  # IO pad configuration
+  io_pad:
+    width: 50.0              # IO pad width in um
+    height: 50.0             # IO pad height in um
+    pads_per_side: 25        # Number of IO pads per die edge
+    margin: 100.0            # Distance from die edge to IO pads
+
+# =============================================================================
+# ROUTING CONFIGURATION
+# =============================================================================
+routing:
+  # Wire properties
+  wire:
+    width: 10.0              # Wire width in um
+    spacing: 10.0            # Minimum wire spacing in um
+    
+  # Via properties (for multi-layer routing)
+  via:
+    diameter: 20.0           # Via diameter in um
+    spacing: 15.0            # Minimum via spacing in um
+    
+  # Global routing settings
+  global_routing:
+    algorithm: "mcmf"        # Algorithm: mcmf (min-cost max-flow)
+    cost_metric: "manhattan" # Cost metric: manhattan, euclidean
+    max_distance: null       # Maximum routing distance (null = unlimited)
+    min_distance: null       # Minimum routing distance (null = no minimum)
+    require_planarity: true  # Enforce planar (crossing-free) routing
+    
+  # Detailed routing settings
+  detailed_routing:
+    algorithm: "river"       # Algorithm: river (river routing)
+    direction: "auto"        # Routing direction: auto, horizontal_first, vertical_first
+    enable_drc: true         # Enable design rule checking
+    max_iterations: 100      # Maximum routing iterations per net
+    
+  # Net ordering settings
+  net_ordering:
+    strategy: "topological"  # Strategy: topological, left_to_right, minimum_crossing, hybrid
+    
+  # Layer assignment settings (for multi-layer)
+  layer_assignment:
+    strategy: "single_layer" # Strategy: single_layer, greedy, load_balanced, crossing_based
+    balance_threshold: 0.1   # Load balance threshold (0-1)
+
+# =============================================================================
+# DESIGN RULES (DRC)
+# =============================================================================
+design_rules:
+  # Minimum spacing rules
+  min_wire_spacing: 10.0     # Minimum wire-to-wire spacing in um
+  min_wire_width: 10.0       # Minimum wire width in um
+  min_via_spacing: 15.0      # Minimum via-to-via spacing in um
+  
+  # Boundary rules
+  boundary_margin: 50.0      # Minimum distance from routing to chip boundary
+  
+  # Angle rules
+  allow_45_degree: false     # Allow 45-degree routing (false = Manhattan only)
+  
+  # Via rules
+  max_vias_per_net: 10       # Maximum vias per net
+  via_enclosure: 5.0         # Via enclosure by metal in um
+
+# =============================================================================
+# ALGORITHM PARAMETERS
+# =============================================================================
+algorithm:
+  # MCMF (Min-Cost Max-Flow) parameters
+  mcmf:
+    implementation: "adjacency_list"  # adjacency_list or matrix
+    use_spfa: true                    # Use SPFA optimization for Bellman-Ford
+    infinity: 1.0e18                  # Infinity value for algorithm
+    
+  # River routing parameters
+  river_routing:
+    l_shape_first: true              # Try L-shape routing before Z-shape
+    z_shape_ratios: [0.5, 0.3, 0.7, 0.25, 0.75]  # Midpoint ratios for Z-shape
+    simplify_paths: true             # Simplify paths by removing collinear points
+    path_tolerance: 0.001            # Tolerance for path simplification
+    
+  # Net ordering parameters
+  net_ordering:
+    detect_cycles: true              # Detect cycles in precedence graph
+    break_cycles: true               # Attempt to break cycles if detected
+    max_cycle_break_attempts: 10     # Maximum cycle breaking attempts
+
+# =============================================================================
+# BENCHMARK CONFIGURATIONS
+# =============================================================================
+benchmarks:
+  # Small benchmark (for quick testing)
+  small:
+    die_width: 1000.0
+    die_height: 1000.0
+    bump_grid: [5, 5]
+    io_per_side: 5
+    bump_pitch: 150.0
+    
+  # Medium benchmark
+  medium:
+    die_width: 3000.0
+    die_height: 3000.0
+    bump_grid: [15, 15]
+    io_per_side: 15
+    bump_pitch: 150.0
+    
+  # Large benchmark
+  large:
+    die_width: 6000.0
+    die_height: 6000.0
+    bump_grid: [30, 30]
+    io_per_side: 30
+    bump_pitch: 150.0
+    
+  # Extra large benchmark
+  xlarge:
+    die_width: 10000.0
+    die_height: 10000.0
+    bump_grid: [50, 50]
+    io_per_side: 50
+    bump_pitch: 150.0
+
+# =============================================================================
+# OUTPUT CONFIGURATION
+# =============================================================================
+output:
+  # Output directory
+  directory: "./output"
+  
+  # Output formats
+  formats:
+    - json                   # JSON format for routing results
+    - yaml                   # YAML format for configuration
+    
+  # Visualization settings
+  visualization:
+    enabled: true
+    format: "png"            # Output format: png, svg, pdf
+    dpi: 150                 # Resolution for raster formats
+    show_grid: true          # Show bump grid
+    show_io_pads: true       # Show IO pads
+    show_routes: true        # Show routing paths
+    show_labels: false       # Show pad labels
+    color_scheme: "default"  # Color scheme: default, grayscale, colorblind
+    
+  # Statistics output
+  statistics:
+    enabled: true
+    include_timing: true     # Include runtime statistics
+    include_memory: false    # Include memory usage statistics
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  level: "INFO"              # Log level: DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: null                 # Log file path (null = console only)
+  
+# =============================================================================
+# PERFORMANCE SETTINGS
+# =============================================================================
+performance:
+  # Parallelization (future feature)
+  parallel: false
+  num_threads: 4
+  
+  # Memory optimization
+  use_sparse_matrix: true    # Use sparse matrices for large designs
+  cache_distances: true      # Cache distance calculations
+  
+  # Progress reporting
+  show_progress: true        # Show progress during routing
+  progress_interval: 100     # Update interval (number of nets)
+
+# =============================================================================
+# EXPERIMENTAL FEATURES
+# =============================================================================
+experimental:
+  # These features are experimental and may not be fully stable
+  enabled: false
+  
+  # Multi-layer optimization
+  multi_layer_optimization: false
+  
+  # Timing-driven routing
+  timing_driven: false
+  
+  # Congestion-aware routing
+  congestion_aware: false

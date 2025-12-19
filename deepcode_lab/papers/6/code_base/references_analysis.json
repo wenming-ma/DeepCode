@@ -1,0 +1,276 @@
+{
+    "paper_info": {
+        "title": "A Network-Flow-Based RDL Routing Algorithm for Flip-Chip Design",
+        "authors": ["S.P. Fang", "W.S. Feng", "H.C. Chen"],
+        "publication": "IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems",
+        "year": 2007,
+        "core_algorithm": "Minimum-Cost Maximum-Flow (MCMF)"
+    },
+    "selected_references": [
+        {
+            "rank": 1,
+            "title": "NetworkX - Network Analysis in Python",
+            "authors": ["Aric Hagberg", "Dan Schult", "Pieter Swart"],
+            "year": "2004-present",
+            "relevance_score": 0.95,
+            "citation_context": "Implements Cherkassky's maximum flow algorithm (Reference [5]) - the core algorithm for global routing",
+            "key_contributions": [
+                "min_cost_flow implementation",
+                "Network graph algorithms",
+                "Comprehensive documentation",
+                "Visualization support"
+            ],
+            "implementation_value": "Essential for implementing the core MCMF-based global routing algorithm. Provides ready-to-use minimum cost maximum flow solver.",
+            "github_info": {
+                "repository_url": "https://github.com/networkx/networkx",
+                "stars_count": 16422,
+                "forks_count": 3442,
+                "last_updated": "2025-12-16",
+                "repository_quality": "Excellent - industry standard library",
+                "key_features": [
+                    "min_cost_flow()",
+                    "maximum_flow()",
+                    "shortest_path algorithms",
+                    "Graph visualization"
+                ],
+                "documentation_quality": "Excellent",
+                "community_activity": "Very active",
+                "language": "Python",
+                "license": "BSD-3-Clause"
+            },
+            "original_reference": "[5] B. V. Cherkassky, 'Efficient algorithms for the maximum flow problem,' Math. Methods Solut. Econ. Probl., vol. 7, pp. 117–126, 1977."
+        },
+        {
+            "rank": 2,
+            "title": "Google OR-Tools - Operations Research Tools",
+            "authors": ["Google"],
+            "year": "2015-present",
+            "relevance_score": 0.92,
+            "citation_context": "Production-grade MCMF solver directly relevant to Reference [5] and the paper's core methodology",
+            "key_contributions": [
+                "Production-grade MCMF solver",
+                "Constraint programming",
+                "Linear programming",
+                "Network flow optimization"
+            ],
+            "implementation_value": "Production-quality implementation of network flow algorithms including MCMF for the wire-bonding pad to bump pad assignment.",
+            "github_info": {
+                "repository_url": "https://github.com/google/or-tools",
+                "stars_count": 12841,
+                "forks_count": 2324,
+                "last_updated": "2025-12-17",
+                "repository_quality": "Excellent - Google-maintained",
+                "key_features": [
+                    "SimpleMinCostFlow",
+                    "MaxFlow solver",
+                    "Multi-language bindings",
+                    "High performance"
+                ],
+                "documentation_quality": "Excellent",
+                "community_activity": "Very active",
+                "language": "C++/Python/Java/C#",
+                "license": "Apache-2.0"
+            },
+            "original_reference": "Related to [5] - implements efficient maximum flow algorithms"
+        },
+        {
+            "rank": 3,
+            "title": "OpenROAD - RTL-to-GDS Flow",
+            "authors": ["The OpenROAD Project"],
+            "year": "2019-present",
+            "relevance_score": 0.88,
+            "citation_context": "Modern open-source EDA tool implementing VLSI routing algorithms related to References [8], [10], and overall methodology",
+            "key_contributions": [
+                "Complete VLSI flow",
+                "Global and detailed routing",
+                "Physical design automation",
+                "Industry-standard algorithms"
+            ],
+            "implementation_value": "Comprehensive VLSI routing implementation including global and detailed routing stages similar to the paper's two-phase approach.",
+            "github_info": {
+                "repository_url": "https://github.com/The-OpenROAD-Project/OpenROAD",
+                "stars_count": 2328,
+                "forks_count": 749,
+                "last_updated": "2025-12-17",
+                "repository_quality": "Excellent - DARPA-funded",
+                "key_features": [
+                    "Global routing",
+                    "Detailed routing (TritonRoute)",
+                    "Timing analysis",
+                    "LEF/DEF support"
+                ],
+                "documentation_quality": "Good",
+                "community_activity": "Very active",
+                "language": "C++/Tcl",
+                "license": "BSD-3-Clause"
+            },
+            "original_reference": "Related to [8] K.-F. Liao et al., 'Single-layer global routing' and [10] C.-C. Tsai et al., 'NEWS'"
+        },
+        {
+            "rank": 4,
+            "title": "CUGR - VLSI Global Routing Tool",
+            "authors": ["CUHK-EDA"],
+            "year": "2019-present",
+            "relevance_score": 0.85,
+            "citation_context": "Modern implementation of global routing algorithms related to References [8] and [12]",
+            "key_contributions": [
+                "VLSI global routing",
+                "Congestion-aware routing",
+                "Multi-layer routing support",
+                "Academic research tool"
+            ],
+            "implementation_value": "Implements global routing with network-based formulation, relevant to understanding modern routing problem formulations.",
+            "github_info": {
+                "repository_url": "https://github.com/cuhk-eda/cu-gr",
+                "stars_count": 140,
+                "forks_count": 42,
+                "last_updated": "2023-02-27",
+                "repository_quality": "Good - academic quality",
+                "key_features": [
+                    "Global routing engine",
+                    "Congestion optimization",
+                    "ISPD benchmark support",
+                    "Pattern routing"
+                ],
+                "documentation_quality": "Moderate",
+                "community_activity": "Moderate",
+                "language": "C++",
+                "license": "BSD-3-Clause"
+            },
+            "original_reference": "Related to [8] and [12] D. Wang et al., 'A performance-driven I/O pin routing algorithm'"
+        },
+        {
+            "rank": 5,
+            "title": "Boost Graph Library",
+            "authors": ["Boost.org"],
+            "year": "2001-present",
+            "relevance_score": 0.82,
+            "citation_context": "C++ graph library implementing algorithms referenced in [5] and [7]",
+            "key_contributions": [
+                "Graph data structures",
+                "Network flow algorithms",
+                "Shortest path algorithms",
+                "Generic C++ programming"
+            ],
+            "implementation_value": "Provides fundamental C++ implementations for graph algorithms including maximum flow for implementing the MCMF-based global routing.",
+            "github_info": {
+                "repository_url": "https://github.com/boostorg/graph",
+                "stars_count": 368,
+                "forks_count": 229,
+                "last_updated": "2025-12-10",
+                "repository_quality": "Excellent - Boost C++ libraries",
+                "key_features": [
+                    "boykov_kolmogorov_max_flow",
+                    "push_relabel_max_flow",
+                    "edmonds_karp_max_flow",
+                    "BFS/DFS traversals"
+                ],
+                "documentation_quality": "Excellent",
+                "community_activity": "Active",
+                "language": "C++",
+                "license": "BSL-1.0"
+            },
+            "original_reference": "Related to [5] Cherkassky's max flow and [7] C.-P. Hsu's river routing algorithm"
+        }
+    ],
+    "original_paper_references": [
+        {
+            "ref_number": 1,
+            "citation": "W. K. Luk, P. Sipala, M. Tamminen, D. Tang, L. Woo, and G. Zobrist, 'A hierarchical global wiring algorithm for custom chip design,' in Proc. 24th ACM/IEEE Design Automation Conf., 1987, pp. 481-489.",
+            "has_github_repo": false,
+            "notes": "1987 conference paper - predates GitHub"
+        },
+        {
+            "ref_number": 2,
+            "citation": "M. Katsumata and K. Tanaka, 'Generating routable pin configurations for high-speed LSI packages,' in Proc. Asia and South Pacific Design Automation Conf., 1995, pp. 451-456.",
+            "has_github_repo": false,
+            "notes": "1995 conference paper - predates GitHub"
+        },
+        {
+            "ref_number": 3,
+            "citation": "S. Tsukiyama, I. Shirakawa, and H. Yamazaki, 'An algorithm for single-row routing with prescribed street directions,' IEEE Trans. Circuits Syst., vol. CAS-32, pp. 167-174, 1983.",
+            "has_github_repo": false,
+            "notes": "1983 journal paper - predates GitHub"
+        },
+        {
+            "ref_number": 4,
+            "citation": "C. Sechen, 'VLSI Placement and Global Routing Using Simulated Annealing,' Kluwer Academic Publishers, 1988.",
+            "has_github_repo": false,
+            "notes": "1988 book - simulated annealing concepts now in many repos"
+        },
+        {
+            "ref_number": 5,
+            "citation": "B. V. Cherkassky, 'Efficient algorithms for the maximum flow problem,' Math. Methods Solut. Econ. Probl., vol. 7, pp. 117–126, 1977.",
+            "has_github_repo": false,
+            "notes": "1977 paper - CORE ALGORITHM - implemented in NetworkX, OR-Tools, Boost"
+        },
+        {
+            "ref_number": 6,
+            "citation": "J. B. Orlin, 'A faster strongly polynomial minimum cost flow algorithm,' in Proc. 20th ACM Symposium on Theory of Computing, 1988, pp. 377-387.",
+            "has_github_repo": false,
+            "notes": "1988 paper - algorithm implemented in various libraries"
+        },
+        {
+            "ref_number": 7,
+            "citation": "C.-P. Hsu, 'Minimum-via topological routing,' IEEE Trans. Computer-Aided Design, vol. CAD-2, pp. 235-246, 1983.",
+            "has_github_repo": false,
+            "notes": "1983 paper - river routing concepts"
+        },
+        {
+            "ref_number": 8,
+            "citation": "K.-F. Liao and M. Sarrafzadeh, 'Single-layer global routing,' IEEE Trans. Computer-Aided Design, vol. 13, pp. 38-47, 1994.",
+            "has_github_repo": false,
+            "notes": "1994 paper - concepts in OpenROAD and CUGR"
+        },
+        {
+            "ref_number": 9,
+            "citation": "H. Kong, T. Yan, and D. F. Wong, 'Automatic routing for flip-chip power delivery network,' in Proc. ACM/IEEE Int. Workshop on System-Level Interconnect Prediction, 2006, pp. 97-104.",
+            "has_github_repo": false,
+            "notes": "2006 paper - relatively recent"
+        },
+        {
+            "ref_number": 10,
+            "citation": "C.-C. Tsai, S.-J. Chen, C.-M. Wang, S.-Y. Kuo, and Y.-W. Chang, 'NEWS: A net-even-wiring system for the routing of clock and signal wires,' in Proc. Int. Conf. Computer-Aided Design, 2000, pp. 120-124.",
+            "has_github_repo": false,
+            "notes": "2000 paper - routing methodology"
+        },
+        {
+            "ref_number": 11,
+            "citation": "E. Shragowitz, J. Lee, and S. Kang, 'SURF: An effective algorithm for hierarchical floorplan optimization,' IEEE Trans. Computer-Aided Design, vol. 8, pp. 1012-1025, 1989.",
+            "has_github_repo": false,
+            "notes": "1989 paper - floorplanning"
+        },
+        {
+            "ref_number": 12,
+            "citation": "D. Wang, C.-C. Tsai, and Y.-W. Chang, 'A performance-driven I/O pin routing algorithm for flip-chip design,' in Proc. Design Automation Conf., 2006, pp. 808-813.",
+            "has_github_repo": false,
+            "notes": "2006 paper - directly related methodology"
+        },
+        {
+            "ref_number": 13,
+            "citation": "L. Luo, T. Yan, Q. Ma, M. D. F. Wong, and T. Shibuya, 'B*-tree: A robust and efficient representation for non-slicing floorplanning,' in Proc. Asia South Pacific Design Automation Conf., 2000, pp. 135-140.",
+            "has_github_repo": false,
+            "notes": "2000 paper - B*-tree representation"
+        },
+        {
+            "ref_number": 14,
+            "citation": "Y.-S. Chen, Y.-L. Wu, Y.-W. Chang, and K.-J. Lee, 'X-Architecture placement based on effective wire models,' in Proc. Int. Conf. Computer-Aided Design, 2004, pp. 830-835.",
+            "has_github_repo": false,
+            "notes": "2004 paper - X-architecture"
+        },
+        {
+            "ref_number": 15,
+            "citation": "H.-T. Lee, M.-F. Chiang, Y.-W. Chang, and L.-C. Lu, 'SAFARI: An effective algorithm for flip-chip area I/O placement,' in Proc. Asia South Pacific Design Automation Conf., 2006, pp. 346-351.",
+            "has_github_repo": false,
+            "notes": "2006 paper - area I/O placement"
+        }
+    ],
+    "analysis_summary": {
+        "total_original_references": 15,
+        "references_with_direct_github_repos": 0,
+        "related_github_repos_identified": 5,
+        "core_algorithm": "Minimum-Cost Maximum-Flow (MCMF)",
+        "best_implementation_repo": "NetworkX or Google OR-Tools",
+        "note": "The original paper (2007) predates GitHub (2008). All 15 references are from 1977-2006 academic publications. The identified repositories implement the algorithmic concepts described in those references."
+    }
+}
